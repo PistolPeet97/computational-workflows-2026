@@ -1,0 +1,46 @@
+# Nextflow
+work/
+.nextflow/
+.nextflow.log*
+null/
+
+# Ausgaben der Pipeline
+results/
+test_reslts/
+results_rnaseq/
+rnaseq_out_allsamples/
+output/
+outdir/
+fetchngs_out/
+
+# Reports, die Nextflow bei -with-report, -with-trace usw. erzeugt
+report*.html
+timeline*.html
+trace*.txt
+dag*.html
+dag*.svg
+dag*.png
+dag*.mmd
+
+# Große Daten (Beispiele, an dein Projekt anpassen)
+*.fastq
+*.fastq.gz
+*.fq.gz
+*.bam
+*.bai
+*.cram
+*.sam
+*.fa
+*.fasta
+*.gtf
+
+# Sonstiges
+.DS_Store
+Thumbs.db
+*:Zone.Identifier
+.vscode/
+.idea/
+__pycache__/
+.ipynb_checkpoints/
+data/
+
