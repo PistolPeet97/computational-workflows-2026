@@ -1,4 +1,6 @@
-params.step = 0
+params {
+    step: Integer = 0
+}
 
 
 workflow{
@@ -7,7 +9,7 @@ workflow{
 
     if (params.step == 1) {
         in_ch = channel.of(1,2,3)
-
+                       .first().view()
     }
 
     // Task 2 - Extract the last item from the channel
@@ -15,6 +17,7 @@ workflow{
     if (params.step == 2) {
 
         in_ch = channel.of(1,2,3)
+                       .last().view()
 
     }
 
@@ -23,7 +26,9 @@ workflow{
     if (params.step == 3) {
 
         in_ch = channel.of(1,2,3)
+                       .collate(2, false).view()
 
+        
 
     }
 
@@ -32,8 +37,7 @@ workflow{
     if (params.step == 4) {
 
         in_ch = channel.of(2,3,4)
-
-
+                       .map{it -> it*it}.view()
     }
 
     // Task 5 - Remember the previous task where you squared the values of the channel. Now, extract the first two items from the squared channel
@@ -50,6 +54,8 @@ workflow{
     if (params.step == 6) {
         
         in_ch = channel.of('Taylor', 'Swift')
+                       .map{ out -> out.reverse()}.view()
+                     
 
     }
 
@@ -58,6 +64,8 @@ workflow{
     if (params.step == 7) {
 
         in_ch = channel.fromPath('files_dir/*.fq')
+                       .map{ files -> files.getName() + "  +  " + files}
+                       .view()
 
         
     }
@@ -70,6 +78,8 @@ workflow{
         ch_2 = channel.of(4,5,6)
         out_ch = channel.of("a", "b", "c")
 
+        out_ch.concat(ch_1, ch_2).view()
+
 
     }
 
@@ -77,7 +87,7 @@ workflow{
 
     if (params.step == 9) {
 
-        in_ch = channel.of([1,2,3], [4,5,6])
+        in_ch = channel.of([1,2,3], [4,5,6]).flatten().view()
 
 
     }
@@ -86,7 +96,7 @@ workflow{
 
     if (params.step == 10) {
 
-        in_ch = channel.of(1,2,3)
+        in_ch = channel.of(1,2,3).toList().view()
 
     }
     
@@ -100,6 +110,8 @@ workflow{
     if (params.step == 11) {
 
         in_ch = channel.of([1, 'V'], [3, 'M'], [2, 'O'], [1, 'f'], [3, 'G'], [1, 'B'], [2, 'L'], [2, 'E'], [3, '33'])
+                       .groupTuple()
+                       .view()
 
     }
 
@@ -110,16 +122,24 @@ workflow{
         left_ch = channel.of([1, 'V'], [3, 'M'], [2, 'O'], [1, 'B'], [3, '33'])
         right_ch = channel.of([1, 'f'], [3, 'G'], [2, 'L'], [2, 'E'],)
 
+
+        left_ch.join(right_ch).view()
+
     }
 
     // Task 13 - Split the input channel into two channels, one of all the even numbers and the other of all the odd numbers. Write the output of each channel to a list
     //           and write them to stdout including information which is which
 
-    if (params.step == 13) {
+   if (params.step == 13) {
+    num = channel.fromList(1..10)
+        .branch { v ->
+            even: v % 2 == 0
+            odd: true
+        }
 
-        in_ch = channel.of(1,2,3,4,5,6,7,8,9,10)
-
-    }
+    num.even.toList().view { list -> "Even numbers: ${list}" }
+    num.odd.toList().view { list -> "Odd numbers: ${list}" }
+}
 
     // Task 14 - Nextflow has the concept of maps. Write the names in the maps in this channel to a file called "names.txt". Each name should be on a new line. 
     //           Store the file in the "results" directory under the name "names.txt"
@@ -135,6 +155,8 @@ workflow{
             ['name': 'Hagrid', 'title': 'groundkeeper'],
             ['name': 'Dobby', 'title': 'hero'],
         )
+        .map { m -> m.name }
+        .collectFile(name: 'names.txt', storeDir: 'results', newLine: true)
     
     }
 

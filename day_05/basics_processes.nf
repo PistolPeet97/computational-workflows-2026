@@ -1,9 +1,129 @@
-params.step = 0
-params.zip = 'zip'
+params {
+    step: Integer = 0
+    zip: String = 'zip'
+}
 
 
 process SAYHELLO {
     debug true
+    script:
+    """
+    echo "Hello World!"
+    """
+}
+
+process SAYHELLO_PYTHON{
+    script:
+      """
+    #!/usr/bin/env python3
+    
+    x = 'Hello'
+    y = 'world!'
+    print(f"{x} - {y}")
+    """
+}
+
+process SAYHELLO_PARAM{
+    debug true
+    
+    input:
+    val input
+
+    script:
+    """
+    echo '$input'
+    """
+    
+}
+
+process SAYHELLO_FILE{
+    debug true
+
+    input:
+    val greeting_ch
+
+    output:
+    path 'process_names.txt'
+
+    script:
+    """
+    echo $greeting_ch > process_names.txt
+    """
+}
+
+process UPPERCASE{
+    debug true
+
+    input:
+    val greeting_ch
+
+    output:
+    path 'upper_names.txt'
+
+    script:
+    """
+    echo "${greeting_ch}" | tr "[a-z]" "[A-Z]" > upper_names.txt
+    """
+}
+
+
+process PRINTUPPER{
+    debug true
+
+    input:
+    path upper_names
+
+    script:
+    """
+    cat ${upper_names}
+    """
+}
+
+process ZIP{
+    debug true
+
+    input:
+    path upper_names
+
+    output:
+    path "${upper_names}.*"
+
+    script:
+    """
+    zip ${upper_names}.zip ${upper_names}
+    """
+}
+
+process ZIPAND{
+    debug true
+
+    input:
+    path upper_names
+
+    output:
+    path "${upper_names}.*"
+
+    script:
+    """
+    zip ${upper_names}.zip ${upper_names}
+
+    gzip -c ${upper_names} > ${upper_names}.gz
+
+    bzip2 -c ${upper_names} > ${upper_names}.bz2
+    """
+}
+
+process WRITETOFILE {
+    input:
+    val list
+
+    output:
+    stdout
+
+    script:
+    """
+    echo "${list.name}\t${list.title}"
+    """
 }
 
 
@@ -51,12 +171,14 @@ workflow {
     //          Print out the path to the zipped file in the console
     if (params.step == 7) {
         greeting_ch = Channel.of("Hello world!")
+        ZIP(UPPERCASE(greeting_ch))
     }
 
     // Task 8 - Create a process that zips the file created in the UPPERCASE process in "zip", "gzip" AND "bzip2" format. Print out the paths to the zipped files in the console
 
     if (params.step == 8) {
         greeting_ch = Channel.of("Hello world!")
+        ZIPAND(UPPERCASE(greeting_ch)).flatten().view()
     }
 
     // Task 9 - Create a process that reads in a list of names and titles from a channel and writes them to a file.
@@ -73,9 +195,10 @@ workflow {
             ['name': 'Dobby', 'title': 'hero'],
         )
 
-        in_ch
-            | WRITETOFILE
-            // continue here
+        WRITETOFILE(in_ch)
+           .map { line -> line.trim()}
+           .collectFile(name: 'names.tsv', storeDir: 'results', newLine: true, seed: "name\ttitle")
+           .view()
     }
 
 }
